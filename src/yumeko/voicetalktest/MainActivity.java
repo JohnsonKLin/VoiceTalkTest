@@ -88,7 +88,7 @@ public class MainActivity extends Activity {
 						}
 					}
 					mAudioRecode.stop();
-					mAudioRecode.release();// ÊÍ·Å×ÊÔ´
+					mAudioRecode.release();
 					mAudioRecode = null;
 					try {
 						fos.close();
@@ -128,7 +128,7 @@ public class MainActivity extends Activity {
 		AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
 				numSampleRateInHz, numChannelConfigOut, numAudioFormat,
 				numBufferSizeInBytes, AudioTrack.MODE_STREAM);
-		// ·ÅÒô
+		// ï¿½ï¿½ï¿½ï¿½
 		audioTrack.play();
 
 		final FileInputStream inFinal = in;
@@ -158,7 +158,7 @@ public class MainActivity extends Activity {
 		}.start();
 	}
 	
-	private recordByAmr(){
+	private void recordByAmr(){
 		mMediaRecorder = new MediaRecorder();
 
 		mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
