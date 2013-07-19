@@ -11,6 +11,11 @@ import java.io.IOException;
 
 public class VoiceSender {
 
+    public interface Messager{
+        public void postMessage(String message);
+        public void postLog(String log);
+    }
+
     public static final String TAG = "VoiceSender";
     public static final String TAG2 = "VoiceSenderTest";
 
@@ -20,15 +25,20 @@ public class VoiceSender {
 
     private boolean isRecording;
 
+    private Messager        mMessager;
 	private MediaRecorder   mMediaRecoder;
-
     private Connection      mConnection;
 
     private LocalSocket mLocalSocketSender;
     private LocalSocket mLocalSocketReceiver;
     private LocalServerSocket mLocalServerSocket;
 
-    private boolean mediaRecoderInitialize(){
+    public void setMessager(Messager messager){
+        mMessager = messager;
+    }
+
+    public boolean mediaRecoderInitialize(){
+
 
 
         if (mMediaRecoder != null) {
@@ -168,6 +178,7 @@ public class VoiceSender {
                 numOfRead = dataInput.read(buffer , offset ,length);
                 if(numOfRead == -1){
                     Log.d(TAG,"no incoming data");
+                    mMessager.postLog("no incoming data");
                     Thread.sleep(100);
                 } else {
                     offset += numOfRead;
@@ -178,6 +189,7 @@ public class VoiceSender {
                 }
             }catch(Exception e){
                 Log.e(TAG,"read date error");
+                mMessager.postLog("read date error");
                 break;
             }
         }
@@ -192,7 +204,7 @@ public class VoiceSender {
 
     private void testSend(byte[] buffer){
         for(int i=0;i<buffer.length;i++){
-            Log.v(TAG2,"index:"+i+","+buffer[i]);
+            mMessager.postLog(i+","+buffer[i]);
         }
     }
 
@@ -223,6 +235,19 @@ public class VoiceSender {
         releaseConnection();
         releaseLocalSocket();
         releaseMediaRecorder();
+    }
+
+    public void talk(){
+        if(isRecording){
+            isRecording = false;
+        }else{
+            if(localSocketInitialize()&&mediaRecoderInitialize()){
+                mMessager.postMessage("voice sender ready");
+            }else{
+                mMessager.postMessage("voice sender initialize error");
+            }
+            new SendThread().start();
+        }
     }
 
     class SendThread extends Thread{
