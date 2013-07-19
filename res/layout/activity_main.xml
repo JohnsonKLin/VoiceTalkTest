@@ -8,30 +8,52 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".MainActivity" >
 
-    <Button android:id="@+id/record"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Record"
-        android:onClick="record" />
-    
-    <Button android:id="@+id/stop"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/record"
-        android:text="Stop"
-        android:onClick="stop" />
-    
-    <Button android:id="@+id/play"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/stop"
-        android:text="Play"
-        android:onClick="play" />
-    
-    <Button android:id="@+id/voiceTalk"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="talk"
-        android:onClick="talk" />
+    <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/ip_and_port"
+            android:layout_marginTop="14dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentLeft="true"
+            android:singleLine="true"
+            android:editable="false"/>
+
+    <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/ip_and_port"
+            android:id="@+id/linearLayout">
+
+        <Button android:id="@+id/talk"
+            android:layout_width="match_parent"
+            android:layout_height="fill_parent"
+            android:text="talk"
+            android:onClick="talk"
+            android:layout_below="@+id/linearLayout"
+            android:layout_alignParentLeft="true"
+            android:layout_weight="1"/>
+
+        <Button android:id="@+id/stop"
+            android:layout_width="match_parent"
+            android:layout_height="fill_parent"
+            android:text="connect"
+            android:onClick="connect"
+            android:layout_below="@+id/ip_and_port"
+            android:layout_alignRight="@+id/ip_and_port"
+            android:layout_weight="1"/>
+    </LinearLayout>
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="New Text"
+            android:id="@+id/amr_data_log"
+            android:layout_below="@+id/linearLayout"
+            android:layout_alignLeft="@+id/linearLayout"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:textIsSelectable="true"/>
 
 </RelativeLayout>

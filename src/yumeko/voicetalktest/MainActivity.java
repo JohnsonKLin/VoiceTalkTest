@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -17,8 +19,10 @@ import android.app.Activity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements VoiceSender.Messager{
 
 	private static int numAudioSource = MediaRecorder.AudioSource.MIC;
 	private static int numSampleRateInHz = 44100;
@@ -30,13 +34,20 @@ public class MainActivity extends Activity {
 	private AudioRecord mAudioRecode;
 	private boolean isRecording;
 	
-	private MediaRecorder mMediaRecorder;
+	private VoiceSender mVoiceSender;
+
+    private EditText mServerIPTextbox;
+    private TextView mLogTextbox;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-	}
+        mServerIPTextbox = (EditText) findViewById(R.id.ip_and_port);
+        mLogTextbox      = (TextView) findViewById(R.id.amr_data_log);
+        mVoiceSender = new VoiceSender();
+        mVoiceSender.setMessager(this);
+    }
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -44,154 +55,35 @@ public class MainActivity extends Activity {
 		getMenuInflater().inflate(R.menu.main, menu);
 		return true;
 	}
-
-	public void record(View v) {
-		File file = new File(Environment.getExternalStorageDirectory()
-				.getAbsolutePath() + "/test.pcm");
-
-		if (file.exists()) {
-			file.delete();
-		}
-
-		try {
-			file.createNewFile();
-		} catch (IOException e) {
-			throw new IllegalStateException("Failed to create "
-					+ file.toString());
-		}
-
-		try {
-			final FileOutputStream fos = new FileOutputStream(file);
-
-			numBufferSizeInBytes = AudioRecord.getMinBufferSize(
-					numSampleRateInHz, numChannelConfigIn, numAudioFormat);
-			mAudioRecode = new AudioRecord(numAudioSource, numSampleRateInHz,
-					numChannelConfigIn, numAudioFormat, numBufferSizeInBytes);
-
-			final byte[] buffer = new byte[numBufferSizeInBytes];
-
-			new Thread() {
-
-				@Override
-				public void run() {
-
-					mAudioRecode.startRecording();
-					isRecording = true;
-
-					while (isRecording) {
-						mAudioRecode.read(buffer, 0, numBufferSizeInBytes);
-						try {
-							fos.write(buffer);
-						} catch (IOException e) {
-							e.printStackTrace();
-							isRecording = false;
-						}
-					}
-					mAudioRecode.stop();
-					mAudioRecode.release();
-					mAudioRecode = null;
-					try {
-						fos.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			}.start();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-	}
-
-	public void stop(View v) {
-		isRecording = false;
-	}
-
-	public void play(View v) {
-		File file = new File(Environment.getExternalStorageDirectory()
-				.getAbsolutePath() + "/test.pcm");
-		FileInputStream in = null;
-		try {
-			in = new FileInputStream(file);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		numBufferSizeInBytes = AudioTrack.getMinBufferSize(numSampleRateInHz,
-				numChannelConfigOut, numAudioFormat);
-
-		byte[] buffer = new byte[numBufferSizeInBytes];
-
-		AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
-				numSampleRateInHz, numChannelConfigOut, numAudioFormat,
-				numBufferSizeInBytes, AudioTrack.MODE_STREAM);
-		// ����
-		audioTrack.play();
-
-		final FileInputStream inFinal = in;
-		final byte[] bufferFinal = buffer;
-		final AudioTrack audioTrackFinal = audioTrack;
-		new Thread() {
-
-			@Override
-			public void run() {
-				int byteread = 0;
-
-				try {
-					while ((byteread = inFinal.read(bufferFinal)) != -1) {
-						System.out.write(bufferFinal, 0, byteread);
-						System.out.flush();
-						audioTrackFinal.write(bufferFinal, 0,
-								numBufferSizeInBytes);
-					}
-				} catch (Exception e) {
-					Log.e("AudioTrack", "Playback Failed");
-				}
-
-				audioTrackFinal.stop();
-				audioTrackFinal.release();
-			}
-
-		}.start();
-	}
-	
-	private void recordByAmr(){
-		mMediaRecorder = new MediaRecorder();
-
-		mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-		mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.RAW_AMR);
-		final int mono = 1;
-		mMediaRecorder.setAudioChannels(mono);
-		mMediaRecorder.setAudioSamplingRate(8000);
-		mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-		mMediaRecorder.setOutputFile(Environment.getExternalStorageDirectory()
-				.getAbsolutePath() + "/test.amr");
-		
-		new Thread(){
-			
-		}.start();
-	}
 	
 	public void talk(View v){
-		
+        mVoiceSender.talk();
 	}
-	
-	private void initLocalSocket(){
-		
-	}
-	
-	private void prepareAudioRecoder(){
-		
-	}
-	
-	private void sendDate(){
-		
-	}
-	
-	private void readAmrFrame(){
-		
-	}
+
+    public void connect(View v){
+        try {
+            Connection connection = Connection.connect(Config.SERVER_IP,Config.SERVER_PORT);
+            postMessage("udpsocket ready,target server ip - " + Config.SERVER_IP + ":" + Config.SERVER_PORT);
+        } catch (SocketException e) {
+            postLog(e.toString());
+            postMessage("socket exception");
+        } catch (UnknownHostException e) {
+            postLog(e.toString());
+            postMessage("unknownHost exception");
+        }
+    }
+
+    @Override
+    public void postMessage(String message) {
+        mServerIPTextbox.setText(message);
+    }
+
+    @Override
+    public void postLog(String log) {
+        if(log.endsWith("\n")){
+            mLogTextbox.append(log);
+        }else{
+            mLogTextbox.append(log+"\n");
+        }
+    }
 }
