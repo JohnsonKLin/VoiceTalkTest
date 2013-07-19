@@ -42,6 +42,11 @@ public class VoiceSender {
 
 
         if (mMediaRecoder != null) {
+            if (isRecording) {
+                mMediaRecoder.stop();
+                isRecording = false;
+            }
+            mMediaRecoder.stop();
             mMediaRecoder.reset();
             mMediaRecoder.release();
         }
@@ -57,6 +62,7 @@ public class VoiceSender {
         try {
             mMediaRecoder.prepare();
             mMediaRecoder.start();
+            isRecording = true;
             return true;
         } catch (Exception e) {
             releaseMediaRecorder();
@@ -93,9 +99,12 @@ public class VoiceSender {
     private void releaseMediaRecorder(){
 
         if(mMediaRecoder!=null){
+            if (isRecording) {
+                mMediaRecoder.stop();
+                isRecording = false;
+            }
             mMediaRecoder.reset();
             mMediaRecoder.release();
-            mMediaRecoder = null;
         }
         isRecording = false;
     }
